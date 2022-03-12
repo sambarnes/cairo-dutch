@@ -4,28 +4,38 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.math import (
     assert_le,
     assert_not_equal,
+    split_felt,
 )
 from starkware.cairo.common.math_cmp import is_not_zero
-from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.uint256 import (
+    Uint256,
+    uint256_le,
+    uint256_mul,
+    uint256_sub,
+)
 from starkware.starknet.common.syscalls import (
     get_block_number,
     get_caller_address,
 )
 
+from openzeppelin.token.erc20.interfaces.IERC20 import IERC20
 from openzeppelin.token.erc721.interfaces.IERC721 import IERC721
 from openzeppelin.utils.constants import FALSE, TRUE
+
 
 #
 # Storage (kept as a single global for simplicity)
 #
+
 
 struct Auction:
     member nftAddress : felt
     member tokenId : Uint256
     member seller : felt
 
-    member startingPrice : felt
-    member discountRate : felt
+    member erc20Address : felt      # Token type accepted
+    member startingPrice : Uint256  # Denominated in above token type
+    member discountRate : Uint256   # Discount = DiscountRate * (CurrentBlock * StartBlock)
     member startBlock : felt
     member durationBlocks : felt
     member sold : felt
@@ -68,19 +78,27 @@ func isInitialized{
     return (res)
 end
 
+
 @view
 func getPrice{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
         range_check_ptr,
     }() -> (
-        res : felt
+        res : Uint256
     ):
-    let (thisAuction) = auction.read()
+    alloc_locals
+    let (local thisAuction) = auction.read()
+
+    # Discount = DiscountRate * (CurrentBlock - StartBlock)
     let (currentBlock) = get_block_number()
     let blocksElapsed = currentBlock - thisAuction.startBlock
-    let discount = thisAuction.discountRate * blocksElapsed
-    let res = thisAuction.startingPrice - discount
+    let (blocksElapsedUint) = felt_to_uint256(blocksElapsed)
+    let (discount, carry) = uint256_mul(thisAuction.discountRate, blocksElapsedUint)
+    assert carry = Uint256(0, 0)
+
+    # Price = StartPrice - Discount
+    let (res) = uint256_sub(thisAuction.startingPrice, discount)
     return (res)
 end
 
@@ -88,6 +106,7 @@ end
 #
 # Setters
 #
+
 
 @external
 func initialize{
@@ -97,8 +116,9 @@ func initialize{
     }(
         nftAddress : felt,
         tokenId : Uint256,
-        startingPrice : felt,
-        discountRate : felt,
+        erc20Address : felt,
+        startingPrice : Uint256,
+        discountRate : Uint256,
         durationBlocks : felt,
     ):
     # Require not initialized
@@ -119,6 +139,7 @@ func initialize{
         nftAddress=nftAddress,
         tokenId=tokenId,
         seller=seller,
+        erc20Address=erc20Address,
         startingPrice=startingPrice,
         discountRate=discountRate,
         startBlock=startBlock,
@@ -136,10 +157,10 @@ func buy{
         pedersen_ptr : HashBuiltin*,
         range_check_ptr
     }(
-        # TODO: replace with msg.value equivalent when Cairo has the syscalls
-        value : felt,
+        value : Uint256,  # Denominated in auction's configured ERC20
     ):
-    let (thisAuction) = auction.read()
+    alloc_locals
+    let (local thisAuction) = auction.read()
 
     # Require initialized
     let (_isInitialized) = isInitialized()
@@ -169,9 +190,22 @@ func buy{
 
     # Require sent value >= price
     let (price) = getPrice()
-    with_attr error_message("value < price"):
-        assert_le(price, value)
+    let (is_valid_bid) = uint256_le(price, value)
+    with_attr error_message("bid value < price"):
+        assert is_valid_bid = TRUE
     end
+
+    # =========================================================================
+    # Buy preconditions met
+    # =========================================================================
+
+    # Transfer ERC20 payment from buyer to seller
+    IERC20.transferFrom(
+        thisAuction.erc20Address,
+        buyer,
+        thisAuction.seller,
+        value,
+    )
 
     # Transfer the token from seller to buyer
     IERC721.transferFrom(
@@ -180,14 +214,13 @@ func buy{
         buyer,
         thisAuction.tokenId,
     )
-    
-    # TODO: transfer ETH value to seller when syscalls available
 
     # Mark as sold
     let uninitializedAuction = Auction(
         nftAddress=thisAuction.nftAddress,
         tokenId=thisAuction.tokenId,
         seller=thisAuction.seller,
+        erc20Address=thisAuction.erc20Address,
         startingPrice=thisAuction.startingPrice,
         discountRate=thisAuction.discountRate,
         startBlock=thisAuction.startBlock,
@@ -196,4 +229,15 @@ func buy{
     )
     auction.write(value=uninitializedAuction)
     return ()
+end
+
+
+#
+# Utils
+#
+
+
+func felt_to_uint256{range_check_ptr}(x) -> (x_ : Uint256):
+    let split = split_felt(x)
+    return (Uint256(low=split.low, high=split.high))
 end

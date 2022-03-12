@@ -1,3 +1,3 @@
 # Build and test
-build :; CAIRO_PATH=openzeppelin nile compile
+build :; nile compile
 test  :; pytest tests/

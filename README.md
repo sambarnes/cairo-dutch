@@ -2,16 +2,16 @@
 
 A Dutch Auction written in [Cairo](https://cairo-lang.org/docs/) for StarkNet. Ported after studying [a reference implementation](https://solidity-by-example.org/app/multi-sig-wallet/) from solidity-by-example.
 
+Allows configurable duration, discount rate, & ERC20 token type accepted as payment. 
+
 > ⚠️ WARNING: This is not intended for production use. The code has barely been tested, let alone audited.
 
 Auction:
-1) Seller of NFT deploys this contract setting a starting price for the NFT.
-2) Auction lasts for a configurable number of blocks.
-3) Price decreases over time.
-4) Participants can buy if sending ETH greater than the current price computed by the contract.
-5) Auction ends when a buyer buys the NFT or the deadline is reached
-
-> I don't think actually sending ETH is allowed right now, but I've stubbed out where these syscalls would go when thats available
+1) Seller of NFT deploys this contract setting a starting price & ERC20 token type accepted.
+2) Auction lasts for a configurable number of blocks (`durationBlocks`).
+3) Price decreases over time (`discountRate`).
+4) Participants can buy if sending ERC20 value greater than or equal to the current price computed by the contract.
+5) Auction ends when a buyer buys the NFT or the deadline is reached.
 
 
 ## Development
