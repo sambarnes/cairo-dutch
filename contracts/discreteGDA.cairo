@@ -181,9 +181,9 @@ func purchase_price{
     let (den1) = Math64x61_exp(Math64x61_mul(decayConstant.read(), time_since_start)) 
     let (den2) = Math64x61_sub(scale_factor, Math64x61_fromFelt(1))
 
-    let (totalCost) = Math64x61_div(Math64x61_mul(num1, num2), Math64x61_mul(den1, den2))
+    let (total_cost) = Math64x61_div(Math64x61_mul(num1, num2), Math64x61_mul(den1, den2))
 
-    return ()
+    return (res=total_cost)
 end
 
 #
