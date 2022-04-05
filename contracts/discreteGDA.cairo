@@ -7,6 +7,7 @@ from starkware.starknet.common.syscalls import (
     get_block_number,
     get_block_timestamp,
     get_caller_address,
+    get_contract_address
 )
 from openzeppelin.utils.constants import FALSE, TRUE
 
@@ -137,15 +138,17 @@ func purchaseTokens{
         assert is_valid_bid = TRUE
     end
 
-    # TODO : Mint all tokens
+    # Mint all tokens
+    _mint_batch(to, numTokens)
 
 
     # Refund buyer for excess payment
     let (buyer) = get_caller_address()
+    let (contract_address) = get_contract_address()
     let (success) = IERC20.transferFrom(
         erc20Address.read(),
         buyer,
-        this, # TODO: should be this contract
+        contract_address, 
         uint256_sub(price, value), # purchase price - value sent
     )
     with_attr error_message("unable to refund"):
@@ -155,6 +158,24 @@ func purchaseTokens{
 
 
     return ()
+end
+
+func _mint_batch{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+        to : felt, amount : felt) -> ():
+    assert_not_zero(to)
+
+    if amount == 0:
+        return ()
+    end
+
+    let (current_id) = currentId.read()
+    _mint(to, current_id)
+
+    currentId.write(current_id + 1)
+
+    return _mint_batch(
+        to=to,
+        amount=(amount - 1))
 end
 
 #
