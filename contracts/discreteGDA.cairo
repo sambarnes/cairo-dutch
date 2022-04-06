@@ -150,20 +150,20 @@ func purchaseTokens{
 
 
     # Refund buyer for excess payment
-    let (buyer : felt) = get_caller_address()
-    let (contract_address : felt) = get_contract_address()
-    let (payment_token : felt) = erc20Address.read()
-    let (excess_price : Uint256) = uint256_sub(price, value)
+    # let (buyer : felt) = get_caller_address()
+    # let (contract_address : felt) = get_contract_address()
+    # let (payment_token : felt) = erc20Address.read()
+    # let (excess_price : Uint256) = uint256_sub(price, value)
 
-    let (success) = IERC20.transferFrom(
-        payment_token,
-        buyer,
-        contract_address, 
-        excess_price, # purchase price - value sent
-    )
-    with_attr error_message("unable to refund"):
-        assert success = TRUE
-    end
+    # let (success) = IERC20.transferFrom(
+    #     payment_token,
+    #     buyer,
+    #     contract_address, 
+    #     excess_price, # purchase price - value sent
+    # )
+    # with_attr error_message("unable to refund"):
+    #     assert success = TRUE
+    # end
 
 
 
