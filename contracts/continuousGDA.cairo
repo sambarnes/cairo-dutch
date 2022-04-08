@@ -144,7 +144,7 @@ func purchaseTokens{
 
     # Mint all tokens
     let (num_tokens) = felt_to_uint256(numTokens)
-    mint(to, num_tokens)
+    ERC20_mint(to, num_tokens)
 
     # Update last available auction
     local new_time = last_time + seconds_of_emission_to_purchase
@@ -192,7 +192,7 @@ func purchase_price{
 
     let (local initial_price) = initialPrice.read()
     let (local decay_constant) = decayConstant.read()
-    let (local emission_rate) = decayConstant.read()
+    let (local emission_rate) = emissionRate.read()
 
     let (mul_num1) = Math64x61_mul(decay_constant, quantity)
     let (div_num1) = Math64x61_div(mul_num1, emission_rate)

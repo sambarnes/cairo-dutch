@@ -1,9 +1,11 @@
 import asyncio
+import time
 
 import pytest
 import starkware.starknet.testing.objects
 from starkware.starknet.testing.starknet import Starknet
 from starkware.starkware_utils.error_handling import StarkException
+from starkware.starknet.business_logic.state import BlockInfo
 
 from tests.utils import Signer, str_to_felt, to_uint, uint
 
@@ -31,6 +33,10 @@ def event_loop():
 async def contract_factory():
     # Deploy the contracts
     starknet = await Starknet.empty()
+
+    # initialize a realistic timestamp
+    set_block_timestamp(starknet.state, round(time.time()))
+
     account1 = await starknet.deploy(
         "openzeppelin/account/Account.cairo",
         constructor_calldata=[signer.public_key],
@@ -77,10 +83,10 @@ async def contract_factory():
 @pytest.mark.asyncio
 async def test_insufficient_payment(contract_factory):
     starknet, contract, account1, account2, erc20 = contract_factory
-    # TODO: Warp 10 blocks ahead = 10 tokens available for sale
+    # Warp 5 seconds ahead = 5 tokens available for sale
+    set_block_timestamp(starknet.state, round(time.time()) + 50)
 
     observed = await contract.purchase_price(5).call()
-
 
     with pytest.raises(StarkException):
         await signer.send_transaction(
@@ -97,7 +103,8 @@ async def test_insufficient_payment(contract_factory):
 @pytest.mark.asyncio
 async def test_insufficient_emissions(contract_factory):
     starknet, contract, account1, account2, erc20 = contract_factory
-    # TODO: Warp 10 blocks ahead = 10 tokens available for sale
+    # Warp 10 seconds ahead = 10 tokens available for sale
+    set_block_timestamp(starknet.state, round(time.time()) + 100)
 
     observed = await contract.purchase_price(11).call()
 
@@ -118,7 +125,8 @@ async def test_insufficient_emissions(contract_factory):
 @pytest.mark.asyncio
 async def test_mint_correctly(contract_factory):
     starknet, contract, account1, account2, erc20 = contract_factory
-    # TODO : Warp 10 blocks ahead = 10 tokens available for sale
+    # Warp 5 seconds ahead = 5 tokens available for sale
+    set_block_timestamp(starknet.state, round(time.time()) + 50)
 
 
     # Checks balance is null
@@ -169,3 +177,8 @@ def assertApproxEqual(expected, actual, tolerance):
     leftBound = (expected * (1000 - tolerance)) / 1000
     rightBound = (expected * (1000 + tolerance)) / 1000
     return leftBound <= actual and actual <= rightBound
+
+def set_block_timestamp(starknet_state, timestamp):
+    starknet_state.state.block_info = BlockInfo(
+        starknet_state.state.block_info.block_number, timestamp
+    )
