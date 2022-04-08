@@ -75,15 +75,6 @@ async def contract_factory():
 
 
 @pytest.mark.asyncio
-async def test_initial_price(contract_factory):
-    """Initial price should be price scale"""
-    starknet, contract, account1, account2, erc20 = contract_factory
-
-    observed = await contract.purchase_price(1).call()
-    assert assertApproxEqual(INITIAL_PRICE, observed.result[0][0], 1)
-
-
-@pytest.mark.asyncio
 async def test_insufficient_payment(contract_factory):
     starknet, contract, account1, account2, erc20 = contract_factory
     # TODO: Warp 10 blocks ahead = 10 tokens available for sale
