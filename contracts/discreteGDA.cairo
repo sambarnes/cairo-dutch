@@ -64,6 +64,7 @@ from contracts.Math64x61 import (
 # Storage
 #
 
+# parameter that controls the id of current ERC721 being minted
 @storage_var
 func currentId() -> (res : felt):
 end
