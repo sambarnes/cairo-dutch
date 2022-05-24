@@ -125,7 +125,7 @@ func purchaseTokens{
     let (block_timestamp) = get_block_timestamp()
     let (fixed_timestamp) = Math64x61_fromFelt(block_timestamp)
     let (last_time) = lastAvailableAuctionStartTime.read()
-    let (emission_rate) = lastAvailableAuctionStartTime.read()
+    let (emission_rate) = emissionRate.read()
     # number of seconds of token emissions that are available to be purchased
     let (seconds_of_emission_available) = Math64x61_sub(fixed_timestamp, last_time)
     let (fixed_num_tokens) = Math64x61_fromFelt(numTokens)
