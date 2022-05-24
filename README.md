@@ -16,6 +16,8 @@ Auction:
 
 ## Development
 
+### Local
+
 ```
 python3.7 -m venv venv
 source venv/bin/activate
@@ -38,3 +40,11 @@ collected 7 items
 tests/test_dutch.py .......                                                           [100%]
 ========================= 7 passed, 3 warnings in 123.53s (0:02:03) ========================= 
 ```
+
+### VSCode DevContainers
+
+This was required (for me, at least) to run on an M1 mac instead of my usual ubuntu box. Using the setup found in [tarrencev/starknet-scaffold](https://github.com/tarrencev/starknet-scaffold) I was able to get it working in VSCode.
+
+> If you are using VSCode, we provide a development container with all required dependencies. When opening VS Code, it should ask you to re-open the project in a container, if it finds the .devcontainer folder. If not, you can open the Command Palette (cmd + shift + p), and run “Remote-Containers: Reopen in Container”.
+
+In the `Cairo LS` shell that gets spawned, run `poetry install`. Then, a `poetry run pytest` should function as if we were on the typical linux setup.
