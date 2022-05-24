@@ -2,21 +2,13 @@
 
 A Dutch Auction written in [Cairo](https://cairo-lang.org/docs/) for StarkNet. Ported after studying [a reference implementation](https://solidity-by-example.org/app/multi-sig-wallet/) from solidity-by-example.
 
-Allows configurable duration, discount rate, & ERC20 token type accepted as payment. 
+A Gradual Dutch Auction has also been added for Starknet. It refers to a new type of Dutch Auction created by [Paradigm Research](https://www.paradigm.xyz/2022/04/gda)
+
+Allows configurable duration, discount rate, & ERC20 token type accepted as payment.
 
 > ⚠️ WARNING: This is not intended for production use. The code has barely been tested, let alone audited.
 
-Auction:
-1) Seller of NFT deploys this contract setting a starting price & ERC20 token type accepted.
-2) Auction lasts for a configurable number of blocks (`durationBlocks`).
-3) Price decreases over time (`discountRate`).
-4) Participants can buy if sending ERC20 value greater than or equal to the current price computed by the contract.
-5) Auction ends when a buyer buys the NFT or the deadline is reached.
-
-
 ## Development
-
-### Local
 
 ```
 python3.7 -m venv venv
@@ -38,7 +30,7 @@ asyncio: mode=legacy
 collected 7 items
 
 tests/test_dutch.py .......                                                           [100%]
-========================= 7 passed, 3 warnings in 123.53s (0:02:03) ========================= 
+========================= 7 passed, 3 warnings in 123.53s (0:02:03) =========================
 ```
 
 ### VSCode DevContainers
